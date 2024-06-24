@@ -26,7 +26,7 @@ def save_crypto_list(crypto_curr_list, file_path):
     Parameters:
         crypto_curr_list (list): List of tuples that hold the cryptocurrencies information like id, symbol and name
         file_path (str): Path of the file to be written
-        
+
     Returns:
         None
     """
