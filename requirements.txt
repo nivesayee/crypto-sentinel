@@ -1,3 +1,5 @@
 requests~=2.32.3
 kafka-python~=2.0.2
 praw~=7.7.1
+pandas~=2.2.3
+textblob~=0.18.0.post0
