@@ -1,10 +1,9 @@
+import time
 from integration.api.config import reddit_client_id, reddit_client_secret, reddit_user_agent, \
     kafka_bootstrap_servers, crypto_list_file, reddit_posts_file
 import praw
 from kafka import KafkaProducer
 import json
-import csv
-
 
 # Setup reddit client
 reddit = praw.Reddit(
@@ -35,6 +34,7 @@ with open(crypto_list_file, "r", encoding="cp437") as crypto_file:
 
 crypto_keywords = ["crypto", "coin", "token", "blockchain", "cryptocurrency", "wallet"]
 
+
 def is_crypto_related(content):
     """
     To see if the reddit post is crypto related.
@@ -52,12 +52,8 @@ def is_crypto_related(content):
 
 # Function to fetch and print posts related to cryptocurrencies
 def fetch_crypto_posts(subreddit_name="all", limit=10):
-    try:
-        # Open the file in write mode (with headers) once at the beginning
-        with open(reddit_posts_file, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.DictWriter(file, fieldnames=["crypto", "title", "subreddit", "content"])
-            writer.writeheader()  # Write the header only once
-
+    while True:
+        try:
             for crypto in crypto_list:
                 print(f"Fetching posts related to {crypto}")
                 query = f'title:"{crypto}" OR subreddit:"{crypto}"'
@@ -74,12 +70,15 @@ def fetch_crypto_posts(subreddit_name="all", limit=10):
 
                     # Check if the post is crypto-related based on title or content
                     if is_crypto_related(post_data['title']) or is_crypto_related(post_data['content']):
-                        # Write the post data directly to the file
-                        writer.writerow(post_data)
+                        # Send to kafka topic
+                        producer.send('reddit_posts_topic', post_data)
 
-    except Exception as e:
-        print(f"An error occurred: {e}")
+            # Wait for a minute before fetching again
+            time.sleep(60)
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":
-    fetch_crypto_posts(limit=50)
+    fetch_crypto_posts(limit=10)
